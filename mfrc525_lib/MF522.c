@@ -8,21 +8,15 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/types.h>
-#include <linux/spi/spidev.h>
 #include <string.h>
 // RFID HEADERS
 #include "MF522.h"
-#include  "../spi.h"
+#include "mfrc522_interface.h"
 
-#define HW_SPI_SELECT()   		CLR_BIT(25)
-#define HW_SPI_UNSELECT() 		SET_BIT(25)
+
+
 //RFID
-static int FileDescriptor;
+
 
 //DElete please
 uchar serNum[5];
@@ -35,25 +29,25 @@ uchar serNum[5];
 
 void ApiInit(int fd)
 {
-	FileDescriptor=fd;
+	//
 }
 
 void Write_MFRC522(uchar addr, uchar val)
 {
-	HW_SPI_SELECT();
-	SPI_transfer(FileDescriptor,(addr<<1)&0x7E);
-	SPI_transfer(FileDescriptor,val);
-	HW_SPI_UNSELECT();
+	mfrc_chip_select();
+	mfrc_spi_transfer_byte((addr<<1)&0x7E);
+	mfrc_spi_transfer_byte(val);
+	mfrc_chip_unselect();
 
 }
 
 uint8_t Read_MFRC522(uchar addr)
 {
 	uchar val;
-	HW_SPI_SELECT();
-	SPI_transfer(FileDescriptor,((addr<<1)&0x7E) | 0x80);
-	val =SPI_transfer(FileDescriptor,0x00);
-	HW_SPI_UNSELECT();
+	mfrc_chip_select();
+	mfrc_spi_transfer_byte(((addr<<1)&0x7E) | 0x80);
+	val = mfrc_spi_transfer_byte(0x00);
+	mfrc_chip_unselect();
 	return val;
 }
 
@@ -104,9 +98,9 @@ void MFRC522_Init(void)
 	Write_MFRC522(TReloadRegH, 0);
 
 	Write_MFRC522(TxAutoReg, 0x40);		//100%ASK
-	Write_MFRC522(ModeReg, 0x3D);		//CRC初始值0x6363	???
+	Write_MFRC522(ModeReg, 0x3D);		//CRCåˆ�å§‹å€¼0x6363	???
 
-	AntennaOn();		//打开天线
+	AntennaOn();		//æ‰“å¼€å¤©çº¿
 }
 
 
@@ -311,7 +305,7 @@ void CalulateCRC(uchar *pIndata, uchar len, uchar *pOutData)
 	uchar i, n;
 
 	ClearBitMask(DivIrqReg, 0x04);			//CRCIrq = 0
-	SetBitMask(FIFOLevelReg, 0x80);			//清FIFO指针
+	SetBitMask(FIFOLevelReg, 0x80);			//æ¸…FIFOæŒ‡é’ˆ
 	//Write_MFRC522(CommandReg, PCD_IDLE);
 
 	// FIFO Write Data

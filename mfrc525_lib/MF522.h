@@ -8,6 +8,8 @@
 #ifndef MF522_H_
 #define MF522_H_
 
+#include "mfrc522_cpu.h"
+#include "mfrc522_types.h"
 
 #define	uchar	unsigned char
 #define	uint	unsigned int
